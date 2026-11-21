@@ -3,12 +3,14 @@ function createDashboardLibrary(tv, defaultEntries) {
   'use strict';
   var key = 'dashboard.appLibrary.v1';
   var defaultInput = {id:'input:hdmi1',name:'HDMI 1',art:'input'};
+  var guideTile = {id:'dashboard:guide',name:'TV guide'};
   var state = { pins: {}, recent: [] };
   var known = Object.create(null);
   defaultEntries.forEach(function (app) { known[app.id] = app; });
 
   function entry(value, allowInput) {
     if (!value || typeof value.id !== 'string' || typeof value.name !== 'string') { return null; }
+    if (allowInput && value.id === guideTile.id) { return guideTile; }
     if (known[value.id]) { return known[value.id]; }
     if (allowInput && /^input:hdmi[1-9]$/.test(value.id)) {
       return {id:value.id,name:value.name.trim().slice(0,32) || 'HDMI '+value.id.slice(-1),
@@ -68,7 +70,7 @@ function createDashboardLibrary(tv, defaultEntries) {
     } catch (error) { failed(error); }
   }
   return {
-    home:home, installed:installed, remember:remember,
+    home:home, installed:installed, remember:remember, guideTile:guideTile,
     recents:function () { return state.recent.slice(); },
     customised:function (slot) { return !!state.pins[slot]; },
     pin:function (slot,app) {

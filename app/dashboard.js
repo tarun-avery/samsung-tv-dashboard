@@ -254,6 +254,9 @@
   function activate(index, app) {
     if (pendingLaunch || playing) { return; }
     app = app || (index >= 0 && index < services.length ? library.home(index) : null);
+    if (app && app.id === library.guideTile.id) {
+      menuOwner = selected; showMenu('TV guide',0); return;
+    }
     var title = app ? app.name : labels[index];
     if (!tv) {
       var detail = inputNumber(app) ? 'HDMI '+inputNumber(app)+' is available on the Samsung TV.' : index === 8 ? 'The paired speaker list is available on the Samsung TV.' : 'This shortcut opens the installed app on the Samsung TV.';
@@ -751,6 +754,11 @@
       }
       if (menuOwner >= 0 && menuOwner < stockApps.length) {
         addOption('Choose another app',function () { showMenu('Choose app',0); });
+        if (library.home(menuOwner).id !== library.guideTile.id) {
+          addOption('Use TV guide on this tile',function () {
+            library.pin(menuOwner,library.guideTile); updateTile(menuOwner); closeMenu();
+          });
+        }
         if (library.customised(menuOwner)) {
           addOption('Restore '+stockApps[menuOwner].name,function () {
             library.pin(menuOwner,null); updateTile(menuOwner); closeMenu();

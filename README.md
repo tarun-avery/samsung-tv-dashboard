@@ -24,6 +24,8 @@ Open `app/index.html` in a browser. Use the arrow keys to move, **Enter** to sel
 
 ## TV guide
 
+To put the guide on an app tile, open **Customise → Tile options**, choose the tile and select **Use TV guide on this tile**. The original streaming service stays in App Library.
+
 Open **TV guide → Add a title**. Enter the name, choose its streaming app, and set the running time for a film or a single episode. For a series, enter the season and episode you plan to watch next.
 
 Choose **I have 40 minutes** to set your time budget. The guide shows up to three unfinished titles that fit, starting with the closest running time. Select a title and choose **Open** to launch its service. Select the title inside the service. When you return to Dashboard, choose **Mark episode watched** to advance, or **Mark film finished** to take a film out of the picks. Use **Edit title** to change the season or correct your progress.
