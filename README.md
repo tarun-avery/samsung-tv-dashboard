@@ -28,9 +28,14 @@ To put the guide on an app tile, open **Customise → Tile options**, choose the
 
 Open **TV guide → Add a title**. Enter the name, choose its streaming app, and set the running time for a film or a single episode. For a series, enter the season and episode you plan to watch next.
 
-Choose **I have 40 minutes** to set your time budget. The guide shows up to three unfinished titles that fit, starting with the closest running time. Select a title and choose **Open** to launch its service. Select the title inside the service. When you return to Dashboard, choose **Mark episode watched** to advance, or **Mark film finished** to take a film out of the picks. Use **Edit title** to change the season or correct your progress.
+Choose **I have 40 minutes** to set your time budget. The guide shows up to three unfinished titles that fit, starting with the closest running time. Select a title and choose **Open** to launch its service. Select the title inside the service. When you return after opening a series through the guide, choose **Still watching** or **Mark episode watched**. For a film, select **Mark film finished** in its details. Use **Edit title** to change the season or correct your progress.
 
 The TV stores your watchlist locally. You can reopen finished entries in **My watchlist**.
+
+- **Finish by** uses the TV’s local clock. Pick a suggested end time or enter one in 24-hour time. The guide counts down and offers unfinished saved titles that fit. Set a fixed minute budget to leave deadline mode.
+- **Movie Night** gives two viewers separate ballots on the same remote. Each selects films or shows, then chooses **Finish ballot**. The results show their shared picks and can choose one at random. A dozen starter ideas and eligible unfinished watchlist titles come from Paramount+, Netflix, Crunchyroll, Apple TV, Prime Video and Disney+. Current subscription access and playback are handled by the streaming app. [Starter title references](docs/movie-night.md)
+- **Add from phone** shows a QR code and a manual pairing code. Open the guide on the TV, connect your phone to the same Wi-Fi as the companion Mac and scan the code with the phone camera. Enter a film or series and its service and runtime. Keep the TV’s pairing screen open until it confirms the addition. This imports titles into the TV watchlist. Episode progress stays on the TV.
+
 
 ![TV guide showing three fictional watchlist picks within 40 minutes](docs/watchlist.png)
 
@@ -52,6 +57,10 @@ The build scripts use `~/tizen-studio` and a profile named `TV-Dashboard`. Set `
 On the MU6100, **Settings → General → Smart Features → Autorun Last App** can reopen Dashboard when it was the last app used. Turn off **Autorun Smart Hub** to hide the startup bar. [Samsung startup settings](https://www.samsung.com/uk/support/tv-audio-video/how-to-turn-the-samsung-home-bar-on-or-off/)
 
 Dashboard sends the launch request and keeps the screen covered until the TV switches apps. Each streaming app loads its own interface. On supported models including the 2017 MU6100 group, Samsung can preload eligible apps from the left side of the **Smart Hub Home** row at power-on. Available memory limits how many it can keep ready. [Samsung prelaunch guide](https://developer.samsung.com/smarttv/develop/guides/fundamentals/prelaunching-applications.html) · [TV model groups](https://developer.samsung.com/smarttv/develop/specifications/tv-model-groups.html)
+
+## Phone companion
+
+Run the local Mac service using the [companion instructions](tools/watchlist-companion/README.md). Before building the TV widget, put its printed HTTP origin on a single line in `phone-origin.txt` beside `Build.command`. The build adds that specific origin to the staged widget’s network permissions. Rebuild and install if the Mac's LAN address changes. The Mac must be awake and the helper reachable while pairing or sending a title.
 
 ## Optional weather
 

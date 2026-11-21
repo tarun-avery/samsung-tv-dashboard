@@ -370,3 +370,10 @@ body.large-tiles .hdmi-status { font-size: 1.3vw; }
 }
 .guide-panel #options .guide-pick:focus { background: #d7f1e7; color: #122d2d; }
 .guide-pick small { display: block; margin-top: .3vw; font-size: 1.12vw; font-weight: 400; }
+
+.phone-pairing-card { display: flex; align-items: center; margin: 1vw 0; }
+.phone-pairing-qr { width: 13vw; height: 13vw; min-width: 116px; min-height: 116px; flex: none; background: white; margin-right: 1.5vw; }
+.phone-pairing-copy, .phone-pairing-address, .phone-pairing-code, .phone-pairing-status { display: block; }
+.phone-pairing-address { word-break: break-all; margin: .6vw 0; }
+.phone-pairing-code { color: #fff; letter-spacing: .12em; font-size: 1.7vw; }
+.phone-pairing-status { margin-top: .55vw; }

@@ -45,7 +45,7 @@
   }
   function restoreFocus() {
     if (!dialog.hidden) { document.querySelector('#dismiss').focus(); }
-    else if (menu) { options.children[optionIndex].focus(); }
+    else if (menu && options.children[optionIndex]) { options.children[optionIndex].focus(); }
     else if (!playing) { focusTile(selected); }
   }
   var clockNode = document.querySelector('time');
@@ -108,8 +108,15 @@
     launchScreen.hidden = true;
     pendingLaunch = null;
   }
+  function confirmGuideLaunch(request) {
+    if (request !== latestRequest || !request.onLaunched) { return; }
+    var notify = request.onLaunched;
+    request.onLaunched = null;
+    notify();
+  }
   function rememberLaunch(index,request) {
     if (request !== latestRequest) { return; }
+    confirmGuideLaunch(request);
     if (request.app) { library.remember(request.app); }
     if (index < 0) { return; }
     if (request === latestRequest && prefs.launched !== index) {
@@ -243,15 +250,15 @@
     button.querySelector('.hdmi-status').hidden = brand !== 7;
     if (selected === slot) { selectionName.textContent = app.name; }
   }
-  function launchEntry(app) {
+  function launchEntry(app,onLaunched) {
     if (inputNumber(app) && menu) { closeMenu(); }
     var slot = -1;
     for (var i=0; i<services.length; i++) {
       if (library.home(i).id === app.id) { slot = i; break; }
     }
-    activate(slot,app);
+    activate(slot,app,onLaunched);
   }
-  function activate(index, app) {
+  function activate(index, app, onLaunched) {
     if (pendingLaunch || playing) { return; }
     app = app || (index >= 0 && index < services.length ? library.home(index) : null);
     if (app && app.id === library.guideTile.id) {
@@ -263,7 +270,7 @@
       message(title,detail);
       return;
     }
-    var request = {index:index,app:app,external:!!app && !inputNumber(app),wasHidden:false};
+    var request = {index:index,app:app,external:!!app && !inputNumber(app),wasHidden:false,onLaunched:onLaunched};
     pendingLaunch = latestRequest = request;
     var brand = app ? brandIndex(app) : -1;
     document.querySelector('#launch-label').textContent = inputNumber(app) ? 'Switching to '+title+'…' : 'Opening ' + title + '…';
@@ -424,6 +431,7 @@
   }
   var setupSlot = -1;
   function closeMenu() {
+    if (menu === 'TV guide') { guide.close(); }
     setupSlot = -1;
     menu = ''; menuEpoch++; shelfEntries = []; panel.hidden = true; focusTile(menuOwner);
     resetIdle();
@@ -1015,12 +1023,13 @@
         // Leave the cover on that frame and clear it when Dashboard returns.
         clearTimeout(launchTimeout);
         pendingLaunch.wasHidden = true;
+        confirmGuideLaunch(pendingLaunch);
       } else { unlockLaunch(); }
       dismissUndo(); flushFocus();
     }
     if (!document.hidden) {
       if (pendingLaunch && pendingLaunch.wasHidden) { unlockLaunch(); }
-      restoreFocus();
+      if (!guide.onReturn()) { restoreFocus(); }
     }
   });
   draw(); clock(); refreshHDMIStatus(); resetIdle();
@@ -1030,4 +1039,5 @@
   var first = prefs.fixed ? prefs.first : prefs.last;
   focusTile(visible().indexOf(first) >= 0 ? first : visible()[0]);
   if (tv && firstVisit) { menuOwner = first; showMenu('Welcome',0); }
+  else if (!document.hidden) { guide.onReturn(); }
 }());

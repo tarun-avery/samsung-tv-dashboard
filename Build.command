@@ -21,6 +21,9 @@ rsync -r --exclude='.*' --include='*/' --include='/config.xml' \
 if [[ -f weather.local.js ]]; then
     cp weather.local.js "$stage/app/weather-location.js"
 fi
+if [[ -f phone-origin.txt ]]; then
+    python3 tools/configure-phone.py phone-origin.txt "$stage/app"
+fi
 print 'Signing Dashboard with the selected Samsung TV profile…'
 if ! "$cli" package -t wgt -s "$profile" -o "$stage/out" -- "$stage/app" > "$stage/sdk.log" 2>&1; then
     print -u2 'Packaging failed. Check the profile name, certificate validity and keychain access in Tizen Studio.'
