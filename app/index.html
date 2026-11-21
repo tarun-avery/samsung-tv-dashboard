@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TV Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div class="home-title">
+        <svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-4.8v-6.8H9.3V21H4.5A1.5 1.5 0 0 1 3 19.5z"/>
+        </svg>
+        <h1>Home</h1>
+      </div>
+      <nav class="top-actions" aria-label="Dashboard">
+        <button id="recent" type="button">Recent apps</button>
+        <button id="library" type="button">App Library</button>
+        <button id="centre" type="button">Control Centre</button>
+      </nav>
+      <div class="clock-block">
+        <time></time>
+        <div id="weather" hidden>
+          <span id="conditions"></span>
+          <small>Weather by Open-Meteo</small>
+        </div>
+      </div>
+    </header>
+
+    <section class="library" aria-label="Apps and inputs">
+      <div class="current-selection" aria-hidden="true">
+        <p id="selection-name">Netflix</p>
+      </div>
+      <div id="tiles"></div>
+    </section>
+
+    <div class="utilities" role="group" aria-label="Dashboard controls">
+      <button type="button" id="air">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8.9 10.8v6.9a1.7 1.7 0 0 1-3.4 0v-7.2C3.9 10 3 8.9 3 7.4A3.4 3.4 0 0 1 6.5 4c2.1 0 3.8 1.6 3.8 3.8 0 1.3-.5 2.3-1.4 3zM15.1 10.8v6.9a1.7 1.7 0 0 0 3.4 0v-7.2c1.6-.5 2.5-1.6 2.5-3.1A3.4 3.4 0 0 0 17.5 4c-2.1 0-3.8 1.6-3.8 3.8 0 1.3.5 2.3 1.4 3z"/>
+        </svg>
+        <span>AirPods</span>
+      </button>
+      <button type="button" id="custom">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 7h7m5 0h6M3 17h3m5 0h10"/>
+          <circle cx="12.5" cy="7" r="2.5"/><circle cx="8.5" cy="17" r="2.5"/>
+        </svg>
+        <span>Customise</span>
+      </button>
+      <button type="button" id="settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m10 3 4 0 .6 2.4 2 .9 2.2-.8 2 3.4-1.7 1.7v2.8l1.7 1.7-2 3.4-2.2-.8-2 .9L14 21h-4l-.6-2.4-2-.9-2.2.8-2-3.4 1.7-1.7v-2.8L3.2 8.9l2-3.4 2.2.8 2-.9Z"/>
+          <circle cx="12" cy="12" r="3.2"/>
+        </svg>
+        <span>Settings</span>
+      </button>
+    </div>
+    <p id="hint" role="status" hidden></p>
+  </main>
+
+  <button type="button" id="undo-hide" hidden></button>
+  <section id="panel" hidden role="dialog" aria-modal="true" aria-labelledby="panel-title">
+    <h2 id="panel-title"></h2>
+    <input id="app-search" type="text" aria-label="Search apps by name" placeholder="Search apps by name" maxlength="60" autocomplete="off" hidden>
+    <p id="panel-note" role="status" hidden></p>
+    <div id="options"></div>
+  </section>
+  <section id="launch-screen" hidden role="status" aria-live="polite">
+    <p id="launch-label"></p>
+  </section>
+  <aside hidden role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-message">
+    <h2 id="dialog-title"></h2>
+    <p id="dialog-message"></p>
+    <button type="button" id="dismiss">Back</button>
+  </aside>
+  <script src="weather-location.js"></script>
+  <script src="app-library.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
