@@ -1,0 +1,7 @@
+.DS_Store
+/.dashboard-build.*
+*.wgt
+*.p12
+*.pfx
+*.pem
+/weather.local.js
