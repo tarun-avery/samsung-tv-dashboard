@@ -11,7 +11,9 @@ import socket
 import subprocess
 import sys
 import time
+from urllib.parse import urlsplit
 
+from episode_guide import EpisodeGuide
 from store import Problem, Queue
 
 HERE = Path(__file__).resolve().parent
@@ -64,7 +66,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Security-Policy", "default-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
-        if self.path in ("/api/pair", "/api/queue", "/api/ack"):
+        if self.path in ("/api/pair", "/api/queue", "/api/ack", "/api/episodes"):
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -115,7 +117,15 @@ class Handler(BaseHTTPRequestHandler):
         except (UnicodeError, ValueError):
             raise Problem(400, "Invalid request body.") from None
         ip = self.client_address[0]
-        if self.path == "/api/pair":
+        if self.path == "/api/episodes":
+            origin = self.headers.get("Origin", "")
+            if origin not in ("", "null", "file://") and not origin.startswith("widget://"):
+                host = urlsplit(origin).hostname or ""
+                if not (local_ip(host) or host == "localhost" or host.endswith(".local")):
+                    raise Problem(403, "Open the episode guide on the TV.")
+            self.server.store.limit(ip, "episodes", 360)
+            self.reply(200, self.server.episodes.lookup(body))
+        elif self.path == "/api/pair":
             tv, invite, code, expiry = self.server.store.pair(token, ip)
             link = self.server.origin + "/#join=" + invite
             self.reply(201, {"tvToken": tv, "phoneUrl": link, "phoneBaseUrl": self.server.origin,
@@ -158,6 +168,7 @@ def make_server(bind, port, data, qr=render_qr):
         names.add("localhost")
     server.hosts = {f"{name}:{port}" for name in names}
     server.store = Queue(data / "watchlist.sqlite3")
+    server.episodes = EpisodeGuide(data)
     server.qr = qr
     return server
 

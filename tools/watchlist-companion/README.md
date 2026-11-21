@@ -21,3 +21,11 @@ launchctl bootout "gui/$(id -u)/local.watchlist-companion"
 ```
 
 To also disable automatic startup, run `launchctl disable "gui/$(id -u)/local.watchlist-companion"`. Run the installer again to re-enable it.
+
+## UK episode guide
+
+Opening the TV's episode shelf sends a series title to this Mac. The helper looks up public [TVmaze](https://www.tvmaze.com/api) metadata, licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Only an exact, unambiguous title is automatically selected. For a remake or translated title, choose the right year and channel on the TV. The helper caches lookups for four hours and labels results from an earlier check if a source is offline.
+
+The main shelf accepts UK streaming premieres on the selected service, including matching regional alternate episode lists, and individually sourced UK release notices in `uk-release-notes.json`. Those notices cover only the named episodes. Worldwide air dates, broadcast TV premieres and general show availability do not verify a UK episode. They appear under **Other episode dates**. An upcoming date may change.
+
+For wider UK subscription coverage, optionally place a [Watchmode API key](https://api.watchmode.com/docs) with GB region access in the file `watchmode.key` in the companion's private Application Support folder. The helper reads it locally and sends it only to Watchmode. It checks episode-level subscription offers for the selected UK service and labels the displayed date as the original air date when the UK premiere date is unknown. Paid-channel add-ons, purchases and rentals are excluded. A four-hour cache limits repeated requests. No key is needed to use the other guide features.

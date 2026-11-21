@@ -1,0 +1,17 @@
+[
+  {
+    "id": 36672, "service": "Paramount+", "source": "Paramount+ UK",
+    "url": "https://www.intl.paramountplus.com/gb/shows/video/ALVE01M78VHW52E76V84BX4Y7V4PES/",
+    "episodes": [[4,1,"2026-11-20"]]
+  },
+  {
+    "id": 64087, "service": "Disney+", "source": "Disney+ UK Press",
+    "url": "https://press.disney.co.uk/news/the-stakes-have-never-been-higher-rivals-returns-with-new-episodes-on-disney-plus-on-november-11th",
+    "episodes": [[2,7,"2026-11-11"],[2,8,"2026-11-11"],[2,9,"2026-11-11"]]
+  },
+  {
+    "id": 33352, "service": "Prime Video", "source": "About Amazon UK",
+    "url": "https://www.aboutamazon.co.uk/news/entertainment/whats-on-prime-video-uk-november-2026",
+    "episodes": [[3,1,"2026-11-11"]]
+  }
+]

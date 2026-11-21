@@ -40,7 +40,7 @@ def main():
         binary = staging / "watchlist-qr"
         subprocess.run(["/usr/bin/xcrun", "swiftc", "-O", str(SOURCE / "qr.swift"), "-o", str(binary)], check=True)
         install_file(binary, DEST / "watchlist-qr", 0o700)
-        for name in ("store.py", "companion.py", "public/index.html", "public/app.js", "public/style.css"):
+        for name in ("store.py", "companion.py", "episode_guide.py", "uk-release-notes.json", "public/index.html", "public/app.js", "public/style.css"):
             install_file(SOURCE / name, DEST / name, 0o600)
         plist = staging / "agent.plist"
         plist.write_bytes(plistlib.dumps({
