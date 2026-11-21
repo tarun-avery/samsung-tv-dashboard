@@ -15,9 +15,11 @@ Open `app/index.html` in a browser. Use the arrow keys to move, **Enter** to sel
 | Open a streaming app | Press **OK** on its tile. Dashboard sends the launch request as soon as the button goes down. |
 | Find an app | Press **Up** from the top row, open **App Library**, then press **Up** from its first row to search. |
 | Return to a recent app | Open **Recent apps** above the grid. It remembers the last eight apps and inputs opened through Dashboard. |
+| Set up your favourite apps | Open **Customise → Set up Home apps**, choose a shortcut, then pick an installed app. Repeat for any other shortcuts and press **Back** when finished. |
 | Replace, move or hide a tile | Open **Customise → Tile options** and select the tile. The yellow remote key opens the highlighted tile’s options with the default shortcuts. |
 | Use hold-to-edit | Turn off **Settings → Launch apps on OK press**. A tap then opens the app on release and a long press opens tile options. |
-| Switch to a console | Select **PS5** to show HDMI 1. Press **Back** to return. |
+| Switch to a console | Select **HDMI 1** to show the connected device. Press **Back** to return. |
+| Connect wireless headphones or a speaker | Open **Bluetooth audio** to reach the TV’s speaker list or model-specific guidance. |
 | Adjust the viewing experience | Open **Control Centre** for audio, Reduce Motion or the landscape screen saver. |
 
 ## Install on a TV

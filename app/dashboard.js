@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var services = ['Netflix','Paramount+','Crunchyroll','Prime Video','Apple TV','YouTube','Disney+','PS5'];
+  var services = ['Netflix','Paramount+','Crunchyroll','Prime Video','Apple TV','YouTube','Disney+','HDMI 1'];
   var aliases = [['netflix'],['paramountplus'],['crunchyroll'],['primevideo','amazonprimevideo','amazonvideo','amazoninstantvideo'],['appletv','appletvplus'],['youtube'],['disneyplus']];
   // IDs reported by the UE43MU6100. Name lookup also supports later installs.
   var installedIds = ['org.tizen.netflix-app','rJyOSqC6Up.PPlusIntl','OGLLvqej7u.CrunchyrollWebApp','evKhCgZelL.AmazonIgnitionLauncher2','Y6A54cEa22.AppleTV','9Ur5IzDKqV.TizenYouTube','MCmYXNxgcu.DisneyPlus'];
@@ -11,7 +11,7 @@
   var dialog = document.querySelector('aside');
   var buttons = [], selected = 0, playing = false, leavingHDMI = false;
   var footerOrigin = null;
-  var labels = services.concat(['AirPods','Customise','Settings','Recent apps','App Library','Control Centre']);
+  var labels = services.concat(['Bluetooth audio','Customise','Settings','Recent apps','App Library','Control Centre']);
   var selectionName = document.querySelector('#selection-name');
   var editing = false, moving = false, quickMove = false;
   var order = services.map(function (_, index) { return index; });
@@ -148,43 +148,43 @@
     }
     try { tv.application.launch(installedIds[index], launched, findByName); } catch (error) { findByName(); }
   }
-  var ps5Status = document.createElement('span');
-  ps5Status.className = 'ps5-status';
+  var hdmiStatus = document.createElement('span');
+  hdmiStatus.className = 'hdmi-status';
   var statusTimer, statusVersion = 0;
-  function ps5Port(list) {
+  function hdmiPort(list) {
     if (!list) { return null; }
     for (var i = 0; i < list.length; i++) {
       if (list[i].type === 'HDMI' && Number(list[i].number) === 1) { return list[i]; }
     }
     return null;
   }
-  function showPS5Status(sources) {
+  function showHDMIStatus(sources) {
     var label = 'Connection unknown';
-    if (sources && ps5Port(sources.connected)) { label = 'PS5 connected'; }
-    else if (sources && ps5Port(sources.disconnected)) { label = 'PS5 not connected'; }
-    if (ps5Status.textContent !== label) {
-      ps5Status.textContent = label;
-      buttons[7].setAttribute('aria-label',label === 'Connection unknown' ? 'PS5, connection unknown' : label);
+    if (sources && hdmiPort(sources.connected)) { label = 'Device connected'; }
+    else if (sources && hdmiPort(sources.disconnected)) { label = 'No device connected'; }
+    if (hdmiStatus.textContent !== label) {
+      hdmiStatus.textContent = label;
+      buttons[7].setAttribute('aria-label','HDMI 1, '+label);
     }
   }
-  function refreshPS5Status() {
+  function refreshHDMIStatus() {
     clearTimeout(statusTimer);
     var version = ++statusVersion;
     if (document.hidden) { return; }
-    if (!tv || !tv.systeminfo) { showPS5Status(null); return; }
+    if (!tv || !tv.systeminfo) { showHDMIStatus(null); return; }
     function received(sources) {
-      if (version === statusVersion) { showPS5Status(sources); }
+      if (version === statusVersion) { showHDMIStatus(sources); }
     }
     try { tv.systeminfo.getPropertyValue('VIDEOSOURCE',received,function () { received(null); }); }
     catch (error) { received(null); }
-    statusTimer = setTimeout(refreshPS5Status,10000);
+    statusTimer = setTimeout(refreshHDMIStatus,10000);
   }
   function playHDMI(request) {
-    function failed() { if (pendingLaunch !== request) { return; } unlockLaunch(true); message('PS5','Turn on the PS5 and check HDMI 1. If the input is unavailable here, select HDMI 1 from Samsung Home → Source.'); }
+    function failed() { if (pendingLaunch !== request) { return; } unlockLaunch(true); message('HDMI 1','Turn on the device and check its HDMI 1 connection. If the input is unavailable here, select HDMI 1 from Samsung Home → Source.'); }
     tv.systeminfo.getPropertyValue('VIDEOSOURCE',function (sources) {
       if (pendingLaunch !== request) { return; }
-      var port = sources && ps5Port(sources.connected);
-      showPS5Status(sources);
+      var port = sources && hdmiPort(sources.connected);
+      showHDMIStatus(sources);
       if (!port) { failed(); return; }
       try {
         tv.tvwindow.setSource(port,function () {
@@ -246,7 +246,7 @@
     var request = {index:index,app:app,external:!!app && app.id !== 'input:hdmi1',wasHidden:false};
     pendingLaunch = latestRequest = request;
     var brand = app ? brandIndex(app) : -1;
-    document.querySelector('#launch-label').textContent = index === 7 ? 'Switching to PS5…' : 'Opening ' + title + '…';
+    document.querySelector('#launch-label').textContent = index === 7 ? 'Switching to HDMI 1…' : 'Opening ' + title + '…';
     launchScreen.hidden = false;
     launchTimeout = setTimeout(function () {
       if (pendingLaunch !== request || request.wasHidden || document.hidden) { return; }
@@ -259,7 +259,7 @@
         var speakerHelp = function () {
           if (pendingLaunch !== request) { return; }
           unlockLaunch(true);
-          message('AirPods','On your TV, open Home → Settings → Sound → Sound Output → Bluetooth Speaker List, then select your paired AirPods.');
+          message('Bluetooth audio','On your TV, open Home → Settings → Sound → Sound Output → Bluetooth Speaker List, then select your headphones or speaker.');
         };
         try { tv.application.launch('org.tizen.btaudiolist',function () { if (pendingLaunch === request) { unlockLaunch(); } },speakerHelp); }
         catch (error) { speakerHelp(); }
@@ -285,7 +285,7 @@
   }
   var wallpapers = ['Alpine lake','Midnight lake','Black'];
   var colours = ['Red','Green','Yellow','Blue'];
-  var actions = services.concat(['AirPods','Last used','Tile options','Recent apps','App Library','Control Centre']);
+  var actions = services.concat(['Bluetooth audio','Last used','Tile options','Recent apps','App Library','Control Centre']);
   var defaults = [7,9,10,8];
   var shortcutSlot = 0;
   var prefs = {quickLaunch:true,reduceMotion:false,filter:false, hidden:[], fixed:false, first:0, last:0, wallpaper:0, sounds:true, ambient:true, weather:true, launched:-1, shortcuts:defaults.slice()};
@@ -401,7 +401,9 @@
     options.appendChild(button);
     return button;
   }
+  var setupSlot = -1;
   function closeMenu() {
+    setupSlot = -1;
     menu = ''; menuEpoch++; shelfEntries = []; panel.hidden = true; focusTile(menuOwner);
     resetIdle();
   }
@@ -428,7 +430,11 @@
     entries.forEach(function (app) {
       var button = addOption(app.name,function () {
         if (pick) {
-          library.pin(menuOwner,app); updateTile(menuOwner); closeMenu();
+          if (setupSlot >= 0) {
+            library.pin(setupSlot,app); updateTile(setupSlot);
+            var position = order.filter(function (id) { return id !== 7; }).indexOf(setupSlot);
+            setupSlot = -1; showMenu('Set up Home apps',position);
+          } else { library.pin(menuOwner,app); updateTile(menuOwner); closeMenu(); }
         } else { launchEntry(app); }
       });
       button.className = 'shelf-card';
@@ -488,7 +494,7 @@
       } else {
         renderShelf(page,epoch,[],'Reading apps from your TV…');
         library.installed(function (apps) {
-          var text = page === 'Choose app' ? 'Choose a replacement for '+services[menuOwner]+'.' : '';
+          var text = page === 'Choose app' ? 'Choose a replacement for '+services[setupSlot >= 0 ? setupSlot : menuOwner]+'.' : '';
           if (!tv) { text = 'Preview shortcuts. Open Dashboard on your TV to see installed apps.'; }
           renderShelf(page,epoch,apps,apps.length ? text : 'No streaming apps were listed by the TV.');
         },function () { renderShelf(page,epoch,[],'Samsung could not provide the app list. Press Back and try again.'); });
@@ -540,6 +546,16 @@
       addOption('Wallpaper · '+wallpapers[prefs.wallpaper],function () { showMenu('Wallpaper',prefs.wallpaper); });
       addOption('Remote shortcuts',function () { showMenu('Remote shortcuts',0); });
       addOption('Tile options',function () { showMenu('Select a tile',0); });
+      addOption('Set up Home apps',function () { showMenu('Set up Home apps',0); });
+    } else if (page === 'Set up Home apps') {
+      panelNote('Choose a shortcut to replace with an app from your TV.');
+      order.forEach(function (slot) {
+        if (slot === 7) { return; }
+        addOption(services[slot],function () {
+          setupSlot = slot;
+          showMenu('Choose app',0);
+        });
+      });
     } else if (page === 'Select a tile') {
       visible().forEach(function (id) {
         addOption(services[id],function () { menuOwner = id; showMenu('Tile options',0); });
@@ -596,7 +612,11 @@
     options.children[Math.max(0,Math.min(position,options.children.length-1))].focus();
   }
   function backMenu() {
-    if (menu === 'Choose app') { showMenu('Tile options',0); }
+    if (menu === 'Choose app' && setupSlot >= 0) {
+      var position = order.filter(function (id) { return id !== 7; }).indexOf(setupSlot);
+      setupSlot = -1; showMenu('Set up Home apps',position);
+    } else if (menu === 'Choose app') { showMenu('Tile options',0); }
+    else if (menu === 'Set up Home apps') { showMenu('Customise',4); }
     else if (menu === 'Remote shortcuts') { showMenu('Customise',2); }
     else if (menu === 'Select a tile') { showMenu('Customise',3); }
     else if (menu === 'Choose shortcut') { showMenu('Remote shortcuts',shortcutSlot); }
@@ -619,7 +639,7 @@
     buttons.push(button);
   });
   services.forEach(function (_,id) { updateTile(id); });
-  buttons[7].appendChild(ps5Status);
+  buttons[7].appendChild(hdmiStatus);
   buttons.push(document.querySelector('#air'),document.querySelector('#custom'),document.querySelector('#settings'),
     document.querySelector('#recent'),document.querySelector('#library'),document.querySelector('#centre'));
   buttons.forEach(function (button,id) {
@@ -652,12 +672,12 @@
     var action = prefs.shortcuts[slot];
     if (action >= 11) { menuOwner = selected; showMenu(labels[action],0); return; }
     if (action === 10) {
-      if (selected >= services.length) { message('Tile options','Highlight an app or the PS5 tile first.'); return; }
+      if (selected >= services.length) { message('Tile options','Highlight an app or the HDMI tile first.'); return; }
       menuOwner = selected; showMenu('Tile options',0); return;
     }
     if (action === 9) {
       var recent = library.recents();
-      if (!recent.length) { message('Last used','Open an app or the PS5 from the dashboard first.'); return; }
+      if (!recent.length) { message('Last used','Open an app or HDMI 1 from the dashboard first.'); return; }
       menuOwner = selected; launchEntry(recent[0]); return;
     }
     activate(action);
@@ -704,7 +724,7 @@
         var leftHDMI = function () {
           leavingHDMI = playing = false; document.body.classList.remove('playing'); focusTile(selected); resetIdle();
         };
-        var failedHide = function () { leftHDMI(); message('PS5','The TV could not close HDMI 1. Open Samsung Home → Source if you need to change the input.'); };
+        var failedHide = function () { leftHDMI(); message('HDMI 1','The TV could not close HDMI 1. Open Samsung Home → Source if you need to change the input.'); };
         try { tv.tvwindow.hide(leftHDMI,failedHide); } catch (error) { failedHide(); }
       }
       return;
@@ -805,7 +825,7 @@
   });
   document.addEventListener('visibilitychange',function () {
     resetIdle(); clock();
-    refreshPS5Status();
+    refreshHDMIStatus();
     if (document.hidden) {
       cancelEnter(); heldAction = wakeKey = null;
       if (pendingLaunch && pendingLaunch.external) {
@@ -821,7 +841,7 @@
       restoreFocus();
     }
   });
-  draw(); clock(); refreshPS5Status(); resetIdle();
+  draw(); clock(); refreshHDMIStatus(); resetIdle();
   requestAnimationFrame(function () {
     requestAnimationFrame(function () { document.body.classList.add('wallpaper-ready'); });
   });
