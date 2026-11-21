@@ -22,6 +22,16 @@ Open `app/index.html` in a browser. Use the arrow keys to move, **Enter** to sel
 | Connect wireless headphones or a speaker | Open **Bluetooth audio** to reach the TV’s speaker list or model-specific guidance. |
 | Adjust the viewing experience | Open **Control Centre** for audio, Reduce Motion or the ambient screen saver. |
 
+## TV guide
+
+Open **TV guide → Add a title**. Enter the name, choose its streaming app, and set the running time for a film or a single episode. For a series, enter the season and episode you plan to watch next.
+
+Choose **I have 40 minutes** to set your time budget. The guide shows up to three unfinished titles that fit, starting with the closest running time. Select a title and choose **Open** to launch its service. Select the title inside the service. When you return to Dashboard, choose **Mark episode watched** to advance, or **Mark film finished** to take a film out of the picks. Use **Edit title** to change the season or correct your progress.
+
+The TV stores your watchlist locally. You can reopen finished entries in **My watchlist**.
+
+![TV guide showing three fictional watchlist picks within 40 minutes](docs/watchlist.png)
+
 ## Install on a TV
 
 1. Install Tizen Studio on a Mac with the Samsung TV and Samsung Certificate extensions. In Certificate Manager, create a Samsung TV signing profile that includes your TV. Keep the same author certificate for later updates. [Samsung certificate guide](https://developer.samsung.com/smarttv/develop/getting-started/setting-up-sdk/creating-certificates.html)
