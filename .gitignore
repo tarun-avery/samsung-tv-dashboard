@@ -5,3 +5,4 @@
 *.pfx
 *.pem
 /weather.local.js
+/phone-origin.txt

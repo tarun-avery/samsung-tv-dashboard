@@ -1,0 +1,5 @@
+__pycache__/
+watchlist-qr
+*.sqlite3*
+
+watchmode.key
