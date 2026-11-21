@@ -9,6 +9,11 @@ function createTVGuide(store,library,ui) {
     active:function () { return ui.active() && screen === 'phone'; },
     done:function () { go('home'); }
   }) : null;
+  var episodes = createEpisodeShelf(store,{
+    active:function () { return ui.active() && screen === 'episodes'; },
+    option:ui.option,note:ui.note,clear:ui.clear,focus:ui.focus,launch:ui.launch,
+    done:function () { go('home'); }
+  });
   var input = document.getElementById('guide-value');
   var pageTitle = document.getElementById('panel-title');
   var ranges = {minutes:'Running time',season:'Season',episode:'Next episode',budget:'Available minutes',finish:'Finish by (24-hour time)'};
@@ -156,6 +161,7 @@ function createTVGuide(store,library,ui) {
     var pending = store.pendingTitle();
     if (!pending) { return false; }
     if (screen !== 'return' || !ui.active()) {
+      if (screen === 'episodes') { episodes.close(); }
       if (phone && screen === 'phone') { phone.close(); }
       night = null; selected = pending; origin = 'home'; go('return');
     }
@@ -240,7 +246,8 @@ function createTVGuide(store,library,ui) {
     }
   }
   function back() {
-    if (screen === 'phone') { phone.back(); }
+    if (screen === 'episodes') { episodes.back(); }
+    else if (screen === 'phone') { phone.back(); }
     else if (screen === 'home') { ui.close(); }
     else if (screen === 'return') { afterReturn(false); }
     else if (screen === 'nightVote') { go('nightReady'); }
@@ -253,6 +260,7 @@ function createTVGuide(store,library,ui) {
   }
   function render(position) {
     clearTimeout(timer);
+    if (screen === 'episodes') { episodes.render(); return; }
     if (screen === 'phone') { phone.render(position); return; }
     generation++;
     var ticket = generation;
@@ -273,6 +281,7 @@ function createTVGuide(store,library,ui) {
         ui.note(store.titles().length ? 'No unwatched titles fit this time. Choose a longer window or add a title.' :
           'Add a title and its running time to see what fits.');
       }
+      row('New episodes on my services',function () { clearTimeout(timer); screen='episodes'; episodes.open(); });
       row('Movie Night · Two viewers',startNight);
       row('My watchlist · '+store.titles().length,function () { go('list'); });
       row('Add a title',addTitle);
@@ -330,6 +339,7 @@ function createTVGuide(store,library,ui) {
     render:render,back:back,onReturn:onReturn,
     close:function () {
       clearTimeout(timer);
+      if (screen === 'episodes') { episodes.close(); }
       if (phone && screen === 'phone') { phone.close(); }
       screen = 'home'; night = null;
     },

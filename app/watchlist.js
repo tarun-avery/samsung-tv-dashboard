@@ -95,6 +95,7 @@ function createWatchlist(storage) {
   return {
     titles:function () { return state.titles.slice(); },
     title:byId,
+    provider:provider,
     minutes:function () { return state.minutes; },
     finishAt:function () { return state.finishAt; },
     remaining:function () { return minutesLeft(Date.now()); },
