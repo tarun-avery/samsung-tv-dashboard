@@ -353,10 +353,23 @@ body.reduce-motion #launch-label { animation-duration: 0s; }
   body.ambient:not(.black):not(.reduce-motion) main::before { animation: none; }
 }
 
-#app-search {
+#hdmi-name, #app-search {
   display: block; width: 100%; padding: .72vw 1.1vw; margin: 0 0 1.15vw;
   border: 1px solid #718593; border-radius: .65vw; background: #223442;
   color: #fff; font: inherit; font-size: 1.4vw;
 }
 #app-search::-webkit-input-placeholder { color: #c4d3dd; }
-#app-search:focus { outline: .16vw solid #fff; }
+#hdmi-name:focus, #app-search:focus { outline: .16vw solid #fff; }
+
+body.large-tiles .library { top: 15vh; }
+body.large-tiles .current-selection { margin-bottom: 1.6vh; }
+body.large-tiles #selection-name { font-size: 5.3vw; }
+body.large-tiles #tiles button { width: calc(33.333% - 1.32vw); height: 16.4vh; }
+body.large-tiles #tiles button:focus::after { border-width: .37vw; }
+body.large-tiles .app-wordmark { font-size: 2.9vw; }
+body.large-tiles .hdmi-status { font-size: 1.3vw; }
+@media (min-aspect-ratio: 2/1) {
+  #selection-name, body.large-tiles #selection-name { font-size: 8vh; }
+  .current-selection { margin-bottom: 2vh; }
+  .utilities { bottom: 3vh; }
+}

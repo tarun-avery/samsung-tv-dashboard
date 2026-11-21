@@ -2,7 +2,7 @@
 function createDashboardLibrary(tv, defaultEntries) {
   'use strict';
   var key = 'dashboard.appLibrary.v1';
-  var inputId = 'input:hdmi1';
+  var defaultInput = {id:'input:hdmi1',name:'HDMI 1',art:'input'};
   var state = { pins: {}, recent: [] };
   var known = Object.create(null);
   defaultEntries.forEach(function (app) { known[app.id] = app; });
@@ -10,16 +10,19 @@ function createDashboardLibrary(tv, defaultEntries) {
   function entry(value, allowInput) {
     if (!value || typeof value.id !== 'string' || typeof value.name !== 'string') { return null; }
     if (known[value.id]) { return known[value.id]; }
-    if (allowInput && value.id === inputId) { return {id:inputId,name:'HDMI 1'}; }
+    if (allowInput && /^input:hdmi[1-9]$/.test(value.id)) {
+      return {id:value.id,name:value.name.trim().slice(0,32) || 'HDMI '+value.id.slice(-1),
+        art:['ps5','xbox','switch'].indexOf(value.art) >= 0 ? value.art : 'input'};
+    }
     if (!/^[A-Za-z0-9]{10}\.[A-Za-z0-9._-]+$/.test(value.id)) { return null; }
     var name = value.name.split(/\s+[–-]\s+/)[0].trim().slice(0,80);
     return name ? {id:value.id,name:name} : null;
   }
   try {
     var saved = JSON.parse(localStorage.getItem(key)) || {};
-    defaultEntries.forEach(function (_, i) {
-      var pin = entry(saved.pins && saved.pins[i],false);
-      if (pin) { state.pins[i] = pin; }
+    defaultEntries.concat(defaultInput).forEach(function (_, i) {
+      var pin = entry(saved.pins && saved.pins[i],true);
+      if (pin && (i !== 7 || /^input:/.test(pin.id))) { state.pins[i] = pin; }
     });
     if (Array.isArray(saved.recent)) {
       saved.recent.forEach(function (item) {
@@ -35,12 +38,13 @@ function createDashboardLibrary(tv, defaultEntries) {
   }
   function remember(app) {
     app = entry(app,true);
-    if (!app || (state.recent[0] && state.recent[0].id === app.id)) { return; }
+    var last = state.recent[0];
+    if (!app || (last && last.id === app.id && last.name === app.name && last.art === app.art)) { return; }
     state.recent = [app].concat(state.recent.filter(function (x) { return x.id !== app.id; })).slice(0,8);
     save();
   }
   function home(slot) {
-    return slot === 7 ? {id:inputId,name:'HDMI 1'} : state.pins[slot] || defaultEntries[slot];
+    return state.pins[slot] || (slot === 7 ? defaultInput : defaultEntries[slot]);
   }
   function installed(done, failed) {
     if (!tv) { done(defaultEntries.slice()); return; }
@@ -68,11 +72,11 @@ function createDashboardLibrary(tv, defaultEntries) {
     recents:function () { return state.recent.slice(); },
     customised:function (slot) { return !!state.pins[slot]; },
     pin:function (slot,app) {
-      if (!defaultEntries[slot]) { return; }
-      if (!app || app.id === defaultEntries[slot].id) { delete state.pins[slot]; }
+      if (!defaultEntries[slot] && slot !== 7) { return; }
+      if (!app || (defaultEntries[slot] && app.id === defaultEntries[slot].id)) { delete state.pins[slot]; }
       else {
-        var valid = entry(app,false);
-        if (!valid) { return; }
+        var valid = entry(app,true);
+        if (!valid || (slot === 7 && !/^input:/.test(valid.id))) { return; }
         state.pins[slot] = valid;
       }
       save();

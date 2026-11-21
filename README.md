@@ -50,3 +50,12 @@ window.dashboardWeatherLocation = { name: 'London', latitude: 51.51, longitude: 
 ```
 
 Git ignores this file. When ambient weather is enabled, Dashboard requests conditions from Open-Meteo for the configured location.
+
+## Make Home yours
+
+- On a fresh TV install, choose **Choose favourites**, tick installed apps in the order you want and select **Apply favourites**. You can keep the default tiles or revisit the picker under **Customise**. Applying a selection hides unused app slots and keeps HDMI shortcuts.
+- Open **Customise → Tile options**, select any tile and choose **Configure HDMI shortcut**. Cycle through the available ports and artwork. Choose HDMI, PS5, Xbox or Nintendo Switch. Press Up from Port to enter your own label. Save to apply it on this TV. You can assign several tiles to different devices.
+- **Customise → Large tiles** switches the remote grid to three columns. The default grid has four.
+- **Customise → My Home** saves one local copy of your tile assignments, order, appearance and remote settings. Restore it after experimenting, or replace it with your latest setup. Recent launches stay current.
+
+The Home grid was checked in both sizes at 640×480, 720×480, 854×480, 1280×720, 1366×768, 1920×1080, 2560×1080, 3840×2160 and 7680×4320 in a browser. Samsung TVs can expose a different app viewport from the panel’s native resolution.

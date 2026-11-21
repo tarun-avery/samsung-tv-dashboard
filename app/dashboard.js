@@ -21,6 +21,12 @@
         order.every(function (id) { return saved.indexOf(id) >= 0; })) { order = saved; }
   } catch (ignored) {}
   var tv = window.tizen;
+  var firstVisit = false;
+  try {
+    firstVisit = !localStorage.getItem('dashboard.welcomeSeen') && !localStorage.getItem('dashboard.preferences') &&
+      !localStorage.getItem('dashboard.appLibrary.v1') && !localStorage.getItem('dashboard.tileOrder');
+    if (tv) { localStorage.setItem('dashboard.welcomeSeen','1'); }
+  } catch (ignored) {}
 
   function focusTile(index) {
     if (!buttons[index] || buttons[index].hidden) { index = visible()[0]; }
@@ -148,24 +154,34 @@
     }
     try { tv.application.launch(installedIds[index], launched, findByName); } catch (error) { findByName(); }
   }
-  var hdmiStatus = document.createElement('span');
-  hdmiStatus.className = 'hdmi-status';
+  var latestSources = null;
   var statusTimer, statusVersion = 0;
-  function hdmiPort(list) {
+  function inputNumber(app) {
+    return app && /^input:hdmi[1-9]$/.test(app.id) ? Number(app.id.slice(-1)) : 0;
+  }
+  function artwork(brand,app) {
+    return 'url(assets/'+(brand === 7 ? (app.art || 'input') : 'tile'+brand)+'.svg)';
+  }
+  function hdmiPort(list,number) {
     if (!list) { return null; }
     for (var i = 0; i < list.length; i++) {
-      if (list[i].type === 'HDMI' && Number(list[i].number) === 1) { return list[i]; }
+      if (list[i].type === 'HDMI' && Number(list[i].number) === number) { return list[i]; }
     }
     return null;
   }
   function showHDMIStatus(sources) {
-    var label = 'Connection unknown';
-    if (sources && hdmiPort(sources.connected)) { label = 'Device connected'; }
-    else if (sources && hdmiPort(sources.disconnected)) { label = 'No device connected'; }
-    if (hdmiStatus.textContent !== label) {
-      hdmiStatus.textContent = label;
-      buttons[7].setAttribute('aria-label','HDMI 1, '+label);
-    }
+    latestSources = sources;
+    services.forEach(function (_, slot) {
+      var app = library.home(slot), number = inputNumber(app);
+      var status = buttons[slot].querySelector('.hdmi-status');
+      status.hidden = !number;
+      if (!number) { return; }
+      var label = sources && hdmiPort(sources.connected,number) ? 'Device connected' :
+        sources && hdmiPort(sources.disconnected,number) ? 'No device connected' : 'Connection unknown';
+      var caption = app.name+' · '+label;
+      if (status.textContent !== caption) { status.textContent = caption; }
+      buttons[slot].setAttribute('aria-label',app.name+', '+label);
+    });
   }
   function refreshHDMIStatus() {
     clearTimeout(statusTimer);
@@ -180,10 +196,10 @@
     statusTimer = setTimeout(refreshHDMIStatus,10000);
   }
   function playHDMI(request) {
-    function failed() { if (pendingLaunch !== request) { return; } unlockLaunch(true); message('HDMI 1','Turn on the device and check its HDMI 1 connection. If the input is unavailable here, select HDMI 1 from Samsung Home → Source.'); }
+    function failed() { if (pendingLaunch !== request) { return; } unlockLaunch(true); message(request.app.name,'Check the connection to HDMI '+inputNumber(request.app)+' or open Samsung Home → Source.'); }
     tv.systeminfo.getPropertyValue('VIDEOSOURCE',function (sources) {
       if (pendingLaunch !== request) { return; }
-      var port = sources && hdmiPort(sources.connected);
+      var port = sources && hdmiPort(sources.connected,inputNumber(request.app));
       showHDMIStatus(sources);
       if (!port) { failed(); return; }
       try {
@@ -192,12 +208,12 @@
           try {
             tv.tvwindow.show(function () {
               if (pendingLaunch !== request) {
-                if (!playing && (!pendingLaunch || pendingLaunch.index !== 7)) {
+                if (!playing && (!pendingLaunch || !inputNumber(pendingLaunch.app))) {
                   try { tv.tvwindow.hide(function () {},function () {}); } catch (ignored) {}
                 }
                 return;
               }
-              rememberLaunch(7,request); unlockLaunch(); playing = true;
+              rememberLaunch(request.index,request); unlockLaunch(); playing = true;
               document.body.classList.add('playing');
             },failed,['0%','0%','100%','100%'],'MAIN');
           } catch (error) { failed(); }
@@ -207,7 +223,7 @@
   }
   function brandIndex(app) {
     for (var i=0; i<stockApps.length; i++) { if (stockApps[i].id === app.id) { return i; } }
-    return app.id === 'input:hdmi1' ? 7 : -1;
+    return inputNumber(app) ? 7 : -1;
   }
   function appColour(name) {
     var palette = ['#26596a','#4a3f79','#864839','#245c50','#364d83','#70435c'];
@@ -220,14 +236,15 @@
     button.setAttribute('data-brand',String(brand));
     button.setAttribute('aria-label',app.name);
     button.style.backgroundColor = brand < 0 ? appColour(app.name) : '';
-    button.style.backgroundImage = brand < 0 ? 'none' : 'url(assets/tile'+brand+'.svg)';
+    button.style.backgroundImage = brand < 0 ? 'none' : artwork(brand,app);
     var mark = button.querySelector('.app-wordmark');
     mark.hidden = brand >= 0;
     mark.textContent = brand < 0 ? app.name : '';
+    button.querySelector('.hdmi-status').hidden = brand !== 7;
     if (selected === slot) { selectionName.textContent = app.name; }
   }
   function launchEntry(app) {
-    if (app.id === 'input:hdmi1' && menu) { closeMenu(); }
+    if (inputNumber(app) && menu) { closeMenu(); }
     var slot = -1;
     for (var i=0; i<services.length; i++) {
       if (library.home(i).id === app.id) { slot = i; break; }
@@ -239,14 +256,14 @@
     app = app || (index >= 0 && index < services.length ? library.home(index) : null);
     var title = app ? app.name : labels[index];
     if (!tv) {
-      var detail = index === 7 ? 'HDMI 1 is available on the Samsung TV.' : index === 8 ? 'The paired speaker list is available on the Samsung TV.' : 'This shortcut opens the installed app on the Samsung TV.';
+      var detail = inputNumber(app) ? 'HDMI '+inputNumber(app)+' is available on the Samsung TV.' : index === 8 ? 'The paired speaker list is available on the Samsung TV.' : 'This shortcut opens the installed app on the Samsung TV.';
       message(title,detail);
       return;
     }
-    var request = {index:index,app:app,external:!!app && app.id !== 'input:hdmi1',wasHidden:false};
+    var request = {index:index,app:app,external:!!app && !inputNumber(app),wasHidden:false};
     pendingLaunch = latestRequest = request;
     var brand = app ? brandIndex(app) : -1;
-    document.querySelector('#launch-label').textContent = index === 7 ? 'Switching to HDMI 1…' : 'Opening ' + title + '…';
+    document.querySelector('#launch-label').textContent = inputNumber(app) ? 'Switching to '+title+'…' : 'Opening ' + title + '…';
     launchScreen.hidden = false;
     launchTimeout = setTimeout(function () {
       if (pendingLaunch !== request || request.wasHidden || document.hidden) { return; }
@@ -254,7 +271,7 @@
       message(title,'The TV is taking longer than expected. Press Back to return and try again.');
     },15000);
     try {
-      if (index === 7) { playHDMI(request); }
+      if (inputNumber(app)) { playHDMI(request); }
       else if (index === 8) {
         var speakerHelp = function () {
           if (pendingLaunch !== request) { return; }
@@ -288,7 +305,7 @@
   var actions = services.concat(['Bluetooth audio','Last used','Tile options','Recent apps','App Library','Control Centre']);
   var defaults = [7,9,10,8];
   var shortcutSlot = 0;
-  var prefs = {quickLaunch:true,reduceMotion:false,filter:false, hidden:[], fixed:false, first:0, last:0, wallpaper:0, sounds:true, ambient:true, weather:true, launched:-1, shortcuts:defaults.slice()};
+  var prefs = {largeTiles:false,quickLaunch:true,reduceMotion:false,filter:false, hidden:[], fixed:false, first:0, last:0, wallpaper:0, sounds:true, ambient:true, weather:true, launched:-1, shortcuts:defaults.slice()};
   try {
     var stored = JSON.parse(localStorage.getItem('dashboard.preferences')) || {};
     Object.keys(prefs).forEach(function (key) {
@@ -377,6 +394,7 @@
       button.className = moving && selected === id ? 'moving' : '';
       if (tiles.children[position] !== button) { tiles.insertBefore(button,tiles.children[position] || null); }
     });
+    document.body.classList.toggle('large-tiles',prefs.largeTiles);
     document.body.classList.toggle('midnight',prefs.wallpaper === 1);
     document.body.classList.toggle('black',prefs.wallpaper === 2);
     document.body.classList.toggle('reduce-motion',prefs.reduceMotion);
@@ -442,7 +460,7 @@
       if (brand >= 0) {
         var logo = document.createElement('span');
         logo.className = 'shelf-logo brand-'+brand;
-        logo.style.backgroundImage = 'url(assets/tile'+brand+'.svg)';
+        logo.style.backgroundImage = artwork(brand,app);
         logo.setAttribute('aria-hidden','true');
         button.insertBefore(logo,button.firstChild);
       } else { button.style.backgroundColor = appColour(app.name); }
@@ -477,12 +495,133 @@
       });
     } catch (ignored) {}
   }
+  var inputName = document.getElementById('hdmi-name');
+  var inputDraft, favouriteApps = [], savedHomeKey = 'dashboard.myHome.v1';
+  var artNames = {input:'HDMI',ps5:'PS5',xbox:'Xbox',switch:'Nintendo Switch'};
+  function editInput(slot) {
+    var current = library.home(slot);
+    inputDraft = {port:inputNumber(current) || 1,art:current.art || 'input',name:inputNumber(current) ? current.name : ''};
+    showMenu('HDMI shortcut',0);
+  }
+  function startFavourites() {
+    favouriteApps = [];
+    showMenu('Choose favourites',0);
+  }
+  function saveMyHome() {
+    try {
+      var pins = stockApps.concat([null]).map(function (_,slot) { return library.home(slot); });
+      localStorage.setItem(savedHomeKey,JSON.stringify({order:order,prefs:prefs,pins:pins}));
+      showMenu('My Home',0); panelNote('My Home saved on this TV.');
+    } catch (error) { panelNote('This TV could not save the layout.'); }
+  }
+  function restoreMyHome() {
+    try {
+      var layout = JSON.parse(localStorage.getItem(savedHomeKey));
+      if (!layout || !Array.isArray(layout.order) || layout.order.length !== 8 ||
+          !order.every(function (id) { return layout.order.indexOf(id) >= 0; }) ||
+          !Array.isArray(layout.pins) || layout.pins.length !== 8 || !layout.prefs ||
+          !Array.isArray(layout.prefs.hidden) || !Array.isArray(layout.prefs.shortcuts)) {
+        throw Error('Invalid layout');
+      }
+      localStorage.setItem('dashboard.tileOrder',JSON.stringify(layout.order));
+      order = layout.order;
+      Object.keys(prefs).forEach(function (key) {
+        if (key !== 'launched' && typeof prefs[key] === typeof layout.prefs[key]) { prefs[key] = layout.prefs[key]; }
+      });
+      layout.pins.forEach(function (app,slot) { library.pin(slot,app); updateTile(slot); });
+      save(); draw(); refreshHDMIStatus(); resetIdle(); showMenu('My Home',0); panelNote('My Home restored.');
+    } catch (error) { panelNote('The saved layout could not be restored.'); }
+  }
+  function renderHomeTools(page,epoch,position) {
+    if (page === 'Welcome') {
+      panelNote('Choose the apps you want on Home. You can change them later in Customise.');
+      addOption('Choose favourites',startFavourites);
+      addOption('Keep default tiles',closeMenu);
+    } else if (page === 'Choose favourites') {
+      panelNote('Reading installed apps…');
+      function ready(apps) {
+        if (epoch !== menuEpoch) { return; }
+        options.textContent = '';
+        panelNote('Select up to seven apps in the order you want them on Home.');
+        addOption('Apply favourites',function () {
+          if (!favouriteApps.length) { panelNote('Choose at least one app first.'); return; }
+          // Keep configured HDMI tiles and fill the remaining slots in display order.
+          var slots = order.filter(function (id) { return !inputNumber(library.home(id)); });
+          if (favouriteApps.length > slots.length) { panelNote('There are '+slots.length+' app slots available.'); return; }
+          favouriteApps.forEach(function (app,i) { library.pin(slots[i],app); updateTile(slots[i]); });
+          prefs.hidden = slots.slice(favouriteApps.length); prefs.filter = prefs.hidden.length > 0;
+          if (visible().indexOf(prefs.first) < 0) { prefs.first = visible()[0]; }
+          save(); draw(); closeMenu(); focusTile(slots[0]);
+        });
+        apps.forEach(function (app) {
+          var button = addOption(app.name,function () {
+            var i = favouriteApps.indexOf(app);
+            if (i >= 0) { favouriteApps.splice(i,1); }
+            else if (favouriteApps.length < 7) { favouriteApps.push(app); }
+            else { panelNote('Seven apps selected. Deselect one to choose another.'); return; }
+            var checked = i < 0;
+            button.textContent = (checked ? '✓ ' : '')+app.name;
+            button.setAttribute('aria-checked',String(checked));
+            panelNote(favouriteApps.length+' selected. Choose Apply favourites to save.');
+          });
+          button.setAttribute('role','checkbox'); button.setAttribute('aria-checked','false');
+        });
+        addOption('Back',backMenu); options.children[apps.length ? 1 : 0].focus();
+      }
+      addOption('Back',backMenu); options.children[0].focus();
+      library.installed(ready,function () { if (epoch === menuEpoch) { panelNote('Could not read installed apps. Try again later.'); } });
+      return true;
+    } else if (page === 'My Home') {
+      var exists = false;
+      try { exists = !!localStorage.getItem(savedHomeKey); } catch (ignored) {}
+      panelNote('Save this TV’s tile layout, appearance, HDMI shortcuts and remote settings.');
+      addOption(exists ? 'Update saved layout' : 'Save current layout',exists ? function () { showMenu('Replace saved layout',0); } : saveMyHome);
+      if (exists) { addOption('Restore saved layout',restoreMyHome); }
+    } else if (page === 'Replace saved layout') {
+      panelNote('Replace My Home with the current layout?');
+      addOption('Keep existing save',backMenu); addOption('Replace save',saveMyHome);
+    } else if (page === 'HDMI shortcut') {
+      inputName.hidden = false;
+      inputName.value = inputDraft.name;
+      var ports = [1,2,3,4];
+      if (latestSources) {
+        var detected = [];
+        (latestSources.connected || []).concat(latestSources.disconnected || []).forEach(function (source) {
+          var n = Number(source.number);
+          if (source.type === 'HDMI' && n >= 1 && n <= 9 && detected.indexOf(n) < 0) { detected.push(n); }
+        });
+        if (detected.length) { ports = detected.sort(function (a,b) { return a-b; }); }
+      }
+      if (ports.indexOf(inputDraft.port) < 0) { ports.push(inputDraft.port); }
+      function defaultName() { return inputDraft.art === 'input' ? 'HDMI '+inputDraft.port : artNames[inputDraft.art]; }
+      function change(action,index) {
+        var name = inputName.value.trim();
+        inputDraft.name = name === defaultName() ? '' : name;
+        action(); showMenu(page,index);
+      }
+      panelNote('Press Up from Port to edit the name. Select Port or Artwork to cycle through choices.');
+      addOption('Port · HDMI '+inputDraft.port,function () { change(function () {
+        inputDraft.port = ports[(ports.indexOf(inputDraft.port)+1)%ports.length];
+      },0); });
+      addOption('Artwork · '+artNames[inputDraft.art],function () { change(function () {
+        var keys = Object.keys(artNames); inputDraft.art = keys[(keys.indexOf(inputDraft.art)+1)%keys.length];
+      },1); });
+      addOption('Save shortcut',function () {
+        library.pin(menuOwner,{id:'input:hdmi'+inputDraft.port,name:inputName.value.trim() || defaultName(),art:inputDraft.art});
+        updateTile(menuOwner); refreshHDMIStatus(); closeMenu();
+      });
+    } else { return false; }
+    addOption('Back',backMenu);
+    options.children[Math.min(position || 0,options.children.length-1)].focus();
+    return true;
+  }
   function showMenu(page,position) {
     menu = page; options.textContent = ''; panel.hidden = false;
     var epoch = ++menuEpoch;
     panel.querySelector('h2').textContent = page;
     panel.scrollTop = 0;
     var isShelf = page === 'Recent apps' || page === 'App Library' || page === 'Choose app';
+    inputName.hidden = true;
     search.value = ''; search.hidden = page !== 'App Library' && page !== 'Choose app';
     panel.classList.toggle('shelf-panel',isShelf);
     panel.classList.toggle('control-panel',page === 'Control Centre');
@@ -547,6 +686,11 @@
       addOption('Remote shortcuts',function () { showMenu('Remote shortcuts',0); });
       addOption('Tile options',function () { showMenu('Select a tile',0); });
       addOption('Set up Home apps',function () { showMenu('Set up Home apps',0); });
+      addOption('Large tiles',function () { prefs.largeTiles = !prefs.largeTiles; save(); draw(); showMenu(page,5); },prefs.largeTiles);
+      addOption('Choose favourites',startFavourites);
+      addOption('My Home',function () { showMenu('My Home',0); });
+    } else if (renderHomeTools(page,epoch,position)) {
+      return;
     } else if (page === 'Set up Home apps') {
       panelNote('Choose a shortcut to replace with an app from your TV.');
       order.forEach(function (slot) {
@@ -600,6 +744,7 @@
           });
         }
       }
+      addOption('Configure HDMI shortcut',function () { editInput(menuOwner); });
       addOption('Set as startup tile',function () {
         prefs.fixed = true; prefs.first = menuOwner; save(); closeMenu();
       });
@@ -612,6 +757,9 @@
     options.children[Math.max(0,Math.min(position,options.children.length-1))].focus();
   }
   function backMenu() {
+    if (menu === 'HDMI shortcut') { showMenu('Tile options',0); return; }
+    if (menu === 'Choose favourites' || menu === 'My Home') { if (menuOwner === 9) { showMenu('Customise',0); } else { closeMenu(); } return; }
+    if (menu === 'Replace saved layout') { showMenu('My Home',0); return; }
     if (menu === 'Choose app' && setupSlot >= 0) {
       var position = order.filter(function (id) { return id !== 7; }).indexOf(setupSlot);
       setupSlot = -1; showMenu('Set up Home apps',position);
@@ -636,10 +784,12 @@
     button.setAttribute('data-service',id);
     var mark = document.createElement('span');
     mark.className = 'app-wordmark'; mark.hidden = true; button.appendChild(mark);
+    var status = document.createElement('span');
+    status.className = 'hdmi-status'; status.hidden = true; button.appendChild(status);
     buttons.push(button);
   });
   services.forEach(function (_,id) { updateTile(id); });
-  buttons[7].appendChild(hdmiStatus);
+
   buttons.push(document.querySelector('#air'),document.querySelector('#custom'),document.querySelector('#settings'),
     document.querySelector('#recent'),document.querySelector('#library'),document.querySelector('#centre'));
   buttons.forEach(function (button,id) {
@@ -684,6 +834,10 @@
   }
   document.addEventListener('keydown',function (event) {
     var key = event.keyCode, back = key === 10009 || key === 27 || key === 8;
+    if (event.target === inputName && !inputName.hidden) {
+      if ([40,27,10009,65376,65385].indexOf(key) >= 0) { event.preventDefault(); options.children[0].focus(); }
+      return;
+    }
     if (event.target === search && !search.hidden) {
       resetIdle();
       if (key === 10009 || key === 27 || key === 65376 || key === 65385 || key === 40) {
@@ -724,7 +878,7 @@
         var leftHDMI = function () {
           leavingHDMI = playing = false; document.body.classList.remove('playing'); focusTile(selected); resetIdle();
         };
-        var failedHide = function () { leftHDMI(); message('HDMI 1','The TV could not close HDMI 1. Open Samsung Home → Source if you need to change the input.'); };
+        var failedHide = function () { leftHDMI(); message('HDMI','The TV could not close the input. Open Samsung Home → Source if you need to change the input.'); };
         try { tv.tvwindow.hide(leftHDMI,failedHide); } catch (error) { failedHide(); }
       }
       return;
@@ -740,6 +894,7 @@
         event.preventDefault();
         var columns = panel.classList.contains('shelf-panel') ? 3 : 1;
         var targetOption = optionIndex;
+        if (key === 38 && optionIndex === 0 && !inputName.hidden) { inputName.focus(); return; }
         if (key === 38 && optionIndex < columns && !search.hidden) {
           search.focus(); return;
         }
@@ -760,7 +915,7 @@
       return;
     }
     if (key === 13) {
-      if (selected < services.length && !editing && (selected === 7 || !prefs.quickLaunch)) {
+      if (selected < services.length && !editing && (inputNumber(library.home(selected)) || !prefs.quickLaunch)) {
         enterTile = selected;
         enterTimer = setTimeout(function () {
           var tile = enterTile;
@@ -779,16 +934,19 @@
     if (key < 37 || key > 40) { return; }
     event.preventDefault();
     var list = visible(), pos = list.indexOf(selected), dest = pos, next = selected;
+    var width = prefs.largeTiles ? 3 : 4;
+    var topKeys = prefs.largeTiles ? [11,12,13] : [11,12,12,13];
+    var bottomKeys = prefs.largeTiles ? [8,9,10] : [8,9,9,10];
     if (pos >= 0) {
-      if (key === 37 && pos % 4 > 0) { dest--; }
-      if (key === 39 && pos % 4 < 3 && pos+1 < list.length) { dest++; }
-      if (key === 38 && pos >= 4) { dest -= 4; }
-      else if (key === 38 && !editing) { next = [11,12,12,13][pos]; topOrigin = {tile:selected,tab:next}; }
+      if (key === 37 && pos % width > 0) { dest--; }
+      if (key === 39 && pos % width < width-1 && pos+1 < list.length) { dest++; }
+      if (key === 38 && pos >= width) { dest -= width; }
+      else if (key === 38 && !editing) { next = topKeys[pos]; topOrigin = {tile:selected,tab:next}; }
       if (key === 40) {
-        if (pos+4 < list.length) { dest += 4; }
-        else if (editing && pos < 4 && list.length > 4) { dest = list.length-1; }
+        if (pos+width < list.length) { dest += width; }
+        else if (pos-pos%width+width < list.length) { dest = list.length-1; }
         else if (!editing) {
-          next = [8,9,9,10][pos % 4];
+          next = bottomKeys[pos % width];
           footerOrigin = {tile:selected, utility:next};
         }
       }
@@ -807,7 +965,7 @@
       if (key === 39) { next = Math.min(13,selected+1); }
       if (key === 40) {
         next = topOrigin && topOrigin.tab === selected && list.indexOf(topOrigin.tile) >= 0 ?
-          topOrigin.tile : list[Math.min(list.length-1,[0,1,3][selected-11])];
+          topOrigin.tile : list[Math.min(list.length-1,topKeys.indexOf(selected))];
       }
     } else if (selected >= 8) {
       if (key === 37) { next = Math.max(8,selected-1); }
@@ -816,8 +974,8 @@
         if (footerOrigin && footerOrigin.utility === selected && list.indexOf(footerOrigin.tile) >= 0) {
           next = footerOrigin.tile;
         } else {
-          var column = [0,2,3][selected-8];
-          next = list[column+4 < list.length ? column+4 : Math.min(column,list.length-1)];
+          var column = bottomKeys.lastIndexOf(selected);
+          next = list[Math.min(list.length-1,column+width*Math.max(0,Math.floor((list.length-1-column)/width)))];
         }
       }
     }
@@ -847,4 +1005,5 @@
   });
   var first = prefs.fixed ? prefs.first : prefs.last;
   focusTile(visible().indexOf(first) >= 0 ? first : visible()[0]);
+  if (tv && firstVisit) { menuOwner = first; showMenu('Welcome',0); }
 }());
