@@ -10,7 +10,7 @@ function createDashboardLibrary(tv, defaultEntries) {
   function entry(value, allowInput) {
     if (!value || typeof value.id !== 'string' || typeof value.name !== 'string') { return null; }
     if (known[value.id]) { return known[value.id]; }
-    if (allowInput && value.id === inputId) { return {id:inputId,name:'PS5'}; }
+    if (allowInput && value.id === inputId) { return {id:inputId,name:'HDMI 1'}; }
     if (!/^[A-Za-z0-9]{10}\.[A-Za-z0-9._-]+$/.test(value.id)) { return null; }
     var name = value.name.split(/\s+[–-]\s+/)[0].trim().slice(0,80);
     return name ? {id:value.id,name:name} : null;
@@ -40,7 +40,7 @@ function createDashboardLibrary(tv, defaultEntries) {
     save();
   }
   function home(slot) {
-    return slot === 7 ? {id:inputId,name:'PS5'} : state.pins[slot] || defaultEntries[slot];
+    return slot === 7 ? {id:inputId,name:'HDMI 1'} : state.pins[slot] || defaultEntries[slot];
   }
   function installed(done, failed) {
     if (!tv) { done(defaultEntries.slice()); return; }

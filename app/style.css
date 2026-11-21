@@ -128,7 +128,7 @@ time { font-size: 1.65vw; font-weight: 500; font-variant-numeric: tabular-nums; 
 #tiles button[data-brand="5"] { background-color: #fafafa; background-size: 61% 56%; }
 #tiles button[data-brand="6"] { background-color: #102654; background-size: 63% 66%; }
 #tiles button[data-brand="7"] { background-color: #1b2539; background-position: center 41%; background-size: 58% 48%; }
-.ps5-status {
+.hdmi-status {
   position: absolute;
   right: .5vw; bottom: 8%; left: .5vw;
   color: #d1dbe9;
