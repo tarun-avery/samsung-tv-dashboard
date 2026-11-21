@@ -340,13 +340,13 @@ body.reduce-motion #launch-label { animation-duration: 0s; }
   body.ambient:not(.black):not(.reduce-motion) main::before { animation: none; }
 }
 
-#hdmi-name, #app-search {
+#guide-value, #hdmi-name, #app-search {
   display: block; width: 100%; padding: .72vw 1.1vw; margin: 0 0 1.15vw;
   border: 1px solid #718593; border-radius: .65vw; background: #223442;
   color: #fff; font: inherit; font-size: 1.4vw;
 }
 #app-search::-webkit-input-placeholder { color: #c4d3dd; }
-#hdmi-name:focus, #app-search:focus { outline: .16vw solid #fff; }
+#guide-value:focus, #hdmi-name:focus, #app-search:focus { outline: .16vw solid #fff; }
 
 body.large-tiles .library { top: 15vh; }
 body.large-tiles .current-selection { margin-bottom: 1.6vh; }
@@ -360,3 +360,13 @@ body.large-tiles .hdmi-status { font-size: 1.3vw; }
   .current-selection { margin-bottom: 2vh; }
   .utilities { bottom: 3vh; }
 }
+
+#panel.guide-panel {
+  width: 49%; background: #152c31; border-color: #587f7d;
+}
+.guide-panel #options .guide-pick {
+  background: #21474a; padding: .76vw 1vw; font-weight: 600;
+  overflow-wrap: break-word;
+}
+.guide-panel #options .guide-pick:focus { background: #d7f1e7; color: #122d2d; }
+.guide-pick small { display: block; margin-top: .3vw; font-size: 1.12vw; font-weight: 400; }

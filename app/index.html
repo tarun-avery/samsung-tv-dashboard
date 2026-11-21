@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TV Dashboard</title>
+  <link rel="icon" href="assets/icon.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,6 +18,7 @@
         <button id="recent" type="button">Recent apps</button>
         <button id="library" type="button">App Library</button>
         <button id="centre" type="button">Control Centre</button>
+        <button id="guide" type="button">TV guide</button>
       </nav>
       <div class="clock-block">
         <time></time>
@@ -55,6 +57,7 @@
   <section id="panel" hidden role="dialog" aria-modal="true" aria-labelledby="panel-title">
     <h2 id="panel-title"></h2>
     <input id="hdmi-name" type="text" maxlength="32" aria-label="HDMI shortcut name" placeholder="Use the artwork or port name" hidden>
+    <input id="guide-value" autocomplete="off" min="1" max="999" hidden>
     <input id="app-search" type="text" aria-label="Search apps by name" placeholder="Search apps by name" maxlength="60" autocomplete="off" hidden>
     <p id="panel-note" role="status" hidden></p>
     <div id="options"></div>
@@ -69,6 +72,8 @@
   </aside>
   <script src="weather-location.js"></script>
   <script src="app-library.js"></script>
+  <script src="watchlist.js"></script>
+  <script src="tv-guide.js"></script>
   <script src="dashboard.js"></script>
 </body>
 </html>

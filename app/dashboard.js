@@ -11,7 +11,7 @@
   var dialog = document.querySelector('aside');
   var buttons = [], selected = 0, playing = false, leavingHDMI = false;
   var footerOrigin = null;
-  var labels = services.concat(['Bluetooth audio','Customise','Settings','Recent apps','App Library','Control Centre']);
+  var labels = services.concat(['Bluetooth audio','Customise','Settings','Recent apps','App Library','Control Centre','TV guide']);
   var selectionName = document.querySelector('#selection-name');
   var editing = false, moving = false, quickMove = false;
   var order = services.map(function (_, index) { return index; });
@@ -302,7 +302,7 @@
   }
   var wallpapers = ['Tide','Dusk','Black'];
   var colours = ['Red','Green','Yellow','Blue'];
-  var actions = services.concat(['Bluetooth audio','Last used','Tile options','Recent apps','App Library','Control Centre']);
+  var actions = services.concat(['Bluetooth audio','Last used','Tile options','Recent apps','App Library','Control Centre','TV guide']);
   var defaults = [7,9,10,8];
   var shortcutSlot = 0;
   var prefs = {largeTiles:false,quickLaunch:true,reduceMotion:false,filter:false, hidden:[], fixed:false, first:0, last:0, wallpaper:0, sounds:true, ambient:true, weather:true, launched:-1, shortcuts:defaults.slice()};
@@ -615,6 +615,16 @@
     options.children[Math.min(position || 0,options.children.length-1)].focus();
     return true;
   }
+  var guide = createTVGuide(createWatchlist({
+    getItem:function (key) { return localStorage.getItem(key); },
+    setItem:function (key,value) { localStorage.setItem(key,value); }
+  }),library,{
+    active:function () { return menu === 'TV guide'; },
+    refresh:function (position) { showMenu('TV guide',position); },
+    close:closeMenu, launch:launchEntry, option:addOption, note:panelNote,
+    clear:function () { options.textContent = ''; },
+    focus:function (position) { options.children[Math.min(position,options.children.length-1)].focus(); }
+  });
   function showMenu(page,position) {
     menu = page; options.textContent = ''; panel.hidden = false;
     var epoch = ++menuEpoch;
@@ -622,10 +632,13 @@
     panel.scrollTop = 0;
     var isShelf = page === 'Recent apps' || page === 'App Library' || page === 'Choose app';
     inputName.hidden = true;
+    document.getElementById('guide-value').hidden = true;
+    panel.classList.toggle('guide-panel',page === 'TV guide');
     search.value = ''; search.hidden = page !== 'App Library' && page !== 'Choose app';
     panel.classList.toggle('shelf-panel',isShelf);
     panel.classList.toggle('control-panel',page === 'Control Centre');
     panelNote('');
+    if (page === 'TV guide') { guide.render(position || 0); return; }
     if (isShelf) {
       if (page === 'Recent apps') {
         var recent = library.recents();
@@ -757,6 +770,7 @@
     options.children[Math.max(0,Math.min(position,options.children.length-1))].focus();
   }
   function backMenu() {
+    if (menu === 'TV guide') { guide.back(); return; }
     if (menu === 'HDMI shortcut') { showMenu('Tile options',0); return; }
     if (menu === 'Choose favourites' || menu === 'My Home') { if (menuOwner === 9) { showMenu('Customise',0); } else { closeMenu(); } return; }
     if (menu === 'Replace saved layout') { showMenu('My Home',0); return; }
@@ -791,7 +805,7 @@
   services.forEach(function (_,id) { updateTile(id); });
 
   buttons.push(document.querySelector('#air'),document.querySelector('#custom'),document.querySelector('#settings'),
-    document.querySelector('#recent'),document.querySelector('#library'),document.querySelector('#centre'));
+    document.querySelector('#recent'),document.querySelector('#library'),document.querySelector('#centre'),document.querySelector('#guide'));
   buttons.forEach(function (button,id) {
     button.setAttribute('data-label',labels[id]);
     button.onfocus = function () {
@@ -834,6 +848,7 @@
   }
   document.addEventListener('keydown',function (event) {
     var key = event.keyCode, back = key === 10009 || key === 27 || key === 8;
+    if (menu === 'TV guide' && guide.key(event)) { return; }
     if (event.target === inputName && !inputName.hidden) {
       if ([40,27,10009,65376,65385].indexOf(key) >= 0) { event.preventDefault(); options.children[0].focus(); }
       return;
@@ -894,6 +909,7 @@
         event.preventDefault();
         var columns = panel.classList.contains('shelf-panel') ? 3 : 1;
         var targetOption = optionIndex;
+        if (key === 38 && optionIndex === 0 && menu === 'TV guide' && guide.focusField()) { return; }
         if (key === 38 && optionIndex === 0 && !inputName.hidden) { inputName.focus(); return; }
         if (key === 38 && optionIndex < columns && !search.hidden) {
           search.focus(); return;
@@ -935,7 +951,7 @@
     event.preventDefault();
     var list = visible(), pos = list.indexOf(selected), dest = pos, next = selected;
     var width = prefs.largeTiles ? 3 : 4;
-    var topKeys = prefs.largeTiles ? [11,12,13] : [11,12,12,13];
+    var topKeys = prefs.largeTiles ? [11,12,13] : [11,12,13,14];
     var bottomKeys = prefs.largeTiles ? [8,9,10] : [8,9,9,10];
     if (pos >= 0) {
       if (key === 37 && pos % width > 0) { dest--; }
@@ -962,10 +978,10 @@
       }
     } else if (selected >= 11) {
       if (key === 37) { next = Math.max(11,selected-1); }
-      if (key === 39) { next = Math.min(13,selected+1); }
+      if (key === 39) { next = Math.min(14,selected+1); }
       if (key === 40) {
         next = topOrigin && topOrigin.tab === selected && list.indexOf(topOrigin.tile) >= 0 ?
-          topOrigin.tile : list[Math.min(list.length-1,topKeys.indexOf(selected))];
+          topOrigin.tile : list[Math.min(list.length-1,Math.min(selected-11,width-1))];
       }
     } else if (selected >= 8) {
       if (key === 37) { next = Math.max(8,selected-1); }
